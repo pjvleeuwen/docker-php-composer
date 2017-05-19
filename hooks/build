@@ -1,0 +1,3 @@
+#!/bin/bash
+docker build -t 'docker-php-composer:latest'
+docker push 'docker-php-composer:latest'
