@@ -1,4 +1,22 @@
 #!/usr/bin/env bash
-docker build . -t $DOCKER_REPO:latest
-docker push $DOCKER_REPO:latest
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." && pwd )"
+mapfile -t CLASSIFIERS <"${DIR}/tag-classifiers.txt"
+mapfile -t VERSIONS <"${DIR}/tag-versions.txt"
+declare -a TAGS
+TAGS+=( "${CLASSIFIERS[@]}" )
+TAGS+=( "${VERSIONS[@]}" )
+for VERSION in "${VERSIONS[@]}"; do
+  for CLASSIFIER in "${CLASSIFIERS[@]}"; do
+    TAGS+=( "${VERSION}-${CLASSIFIER}" )
+  done
+done
+GENDIR="${DIR}/generated"
+mkdir -p "${GENDIR}"
+for TAG in "${TAGS[@]}"; do
+  DOCKERFILE="${GENDIR}/Dockerfile-${TAG}"
+  echo "  FROM php:${TAG}" >"${DOCKERFILE}"
+  cat "${DIR}/Dockerfile" >>"${DOCKERFILE}"
+  docker build "${DIR}" -f "${DOCKERFILE}" -t "${DOCKER_REPO}:${TAG}"
+  docker push "${DOCKER_REPO}:${TAG}"
+done
 
