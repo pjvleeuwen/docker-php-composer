@@ -12,11 +12,27 @@ for VERSION in "${VERSIONS[@]}"; do
 done
 GENDIR="${DIR}/generated"
 mkdir -p "${GENDIR}"
-for TAG in "${TAGS[@]}"; do
+for TAGIDX in "${!TAGS[@]}"; do
+  TAG="${TAGS[$TAGIDX]}"
+  TAGCNT=$((TAGIDX+1))
   DOCKERFILE="${GENDIR}/Dockerfile-${TAG}"
   echo "  FROM php:${TAG}" >"${DOCKERFILE}"
   cat "${DIR}/Dockerfile" >>"${DOCKERFILE}"
+  echo
+  echo
+  echo "/-----------------------"
+  echo "/ DOCKER BUILD (${TAGCNT}/${#TAGS[@]}) ${TAG}"
+  echo "/"
   docker build "${DIR}" -f "${DOCKERFILE}" -t "${DOCKER_REPO}:${TAG}"
+  echo "|"
+  echo "| DOCKER BUILD FINISHED"
+  echo "|-----------------------"
+  echo "| DOCKER PUSH (${TAGCNT}/${#TAGS[@]}) ${TAG}"
+  echo "|"
   docker push "${DOCKER_REPO}:${TAG}"
+  echo "\\"
+  echo "\\ DOCKER PUSH FINISHED"
+  echo "\\-----------------------"
+  echo
 done
 
